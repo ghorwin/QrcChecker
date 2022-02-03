@@ -28,6 +28,18 @@ private slots:
 	void on_pushButtonScan_clicked();
 
 private:
+	/*! Holds information about a referenced resource. */
+	struct ResourceFileInfo {
+		/*! Index of QRC file in list; -1 if not in QRC file. */
+		int		qrcIndex;
+		/*! True, if contained in file system. */
+		bool	m_exists;
+		/*! Relative file path to QRC */
+		QString	m_qrcFilePath;
+		/*! Absolute file path to project base */
+		QString	m_filePath;
+	};
+
 	void saveInput();
 
 	Ui::QrcChecker *ui;

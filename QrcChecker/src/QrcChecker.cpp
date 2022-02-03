@@ -42,6 +42,9 @@ QrcChecker::QrcChecker(QWidget *parent)
 		w->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
 		ui->tableWidgetQrcFiles->setItem(j,0,w);
 	}
+
+	ui->pushButtonRemoveUnusedFromQrc->setEnabled(false);
+	ui->pushButtonRemoveUnusedFromFileSystem->setEnabled(false);
 }
 
 
@@ -112,9 +115,35 @@ void QrcChecker::on_toolButtonRemoveQrc_clicked() {
 void QrcChecker::on_pushButtonScan_clicked() {
 	saveInput();
 
+	// start by parsing qrc files
+	QStringList qrcFiles;
+	QStringList referencedFiles;
+	for (int j=0; j<ui->tableWidgetQrcFiles->rowCount(); ++j) {
+		qrcFiles.append( ui->tableWidgetQrcFiles->item(j,0)->text() );
+	}
+
 }
 
 
 void QrcChecker::saveInput() {
+	QSettings settings(ORGANIZATION, PROGRAM_VERSION_NAME);
+	settings.setValue("BaseDirectory", ui->lineEditBaseDirectory->text());
+	QString wildCards = ui->lineEditResourceFileTypes->text().trimmed().toLower();
+	if (ui->checkBoxJPGFiles->isChecked() && !wildCards.contains("*.jpg")) {
+		if (wildCards.isEmpty())
+			wildCards += ";";
+		wildCards += "*.jpg";
+	}
+	if (ui->checkBoxPNGFiles->isChecked() && !wildCards.contains("*.png")) {
+		if (wildCards.isEmpty())
+			wildCards += ";";
+		wildCards += "*.png";
+	}
+	settings.setValue("FileTypeWildCards", wildCards);
 
+	QStringList qrcFiles;
+	for (int j=0; j<ui->tableWidgetQrcFiles->rowCount(); ++j)
+		qrcFiles.append( ui->tableWidgetQrcFiles->item(j,0)->text() );
+
+	 settings.setValue("QRCFiles", qrcFiles);
 }
