@@ -39,6 +39,8 @@ QrcChecker::QrcChecker(QWidget *parent)
 	for (int j=0; j<qrcFiles.size(); ++j) {
 		QString qrc = qrcFiles[j];
 		QTableWidgetItem * w = new QTableWidgetItem(qrc);
+        QString absPath = QDir(baseDir).absoluteFilePath(qrc);
+        w->setData(Qt::UserRole, absPath);
 		w->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
 		ui->tableWidgetQrcFiles->setItem(j,0,w);
 	}
@@ -78,6 +80,7 @@ void QrcChecker::on_toolButtonAddQrc_clicked() {
 	int r = ui->tableWidgetQrcFiles->rowCount();
 	ui->tableWidgetQrcFiles->setRowCount(r+1);
 	QTableWidgetItem * w = new QTableWidgetItem(relPath);
+    w->setData(Qt::UserRole, qrcFile); // store absolute file path
 	ui->tableWidgetQrcFiles->blockSignals(true);
 	ui->tableWidgetQrcFiles->setItem(r,0,w);
 	// select last item
@@ -120,6 +123,8 @@ void QrcChecker::on_pushButtonScan_clicked() {
 	QStringList referencedFiles;
 	for (int j=0; j<ui->tableWidgetQrcFiles->rowCount(); ++j) {
 		qrcFiles.append( ui->tableWidgetQrcFiles->item(j,0)->text() );
+
+        // parse QRC file
 	}
 
 }
@@ -146,4 +151,17 @@ void QrcChecker::saveInput() {
 		qrcFiles.append( ui->tableWidgetQrcFiles->item(j,0)->text() );
 
 	 settings.setValue("QRCFiles", qrcFiles);
+}
+
+
+
+void QrcChecker::on_lineEditBaseDirectory_editingFinished() {
+    // update relative file paths of qrc files
+    for (int j=0; j<ui->tableWidgetQrcFiles->rowCount(); ++j) {
+        QTableWidgetItem * w = ui->tableWidgetQrcFiles->item(j,0);
+        QString qrcFile = w->data(Qt::UserRole).toString();
+        QDir baseDir(ui->lineEditBaseDirectory->text());
+        QString relPath = baseDir.relativeFilePath(qrcFile);
+        w->setText(relPath);
+    }
 }
