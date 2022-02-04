@@ -6,6 +6,7 @@
 #include <QTableWidgetItem>
 #include <QTableWidget>
 #include <QSettings>
+#include <QXmlStreamReader>
 
 const char * const ORGANIZATION = "IBK";
 const char * const PROGRAM_VERSION_NAME = "QrcChecker 1.0";
@@ -119,13 +120,17 @@ void QrcChecker::on_pushButtonScan_clicked() {
 	saveInput();
 
 	// start by parsing qrc files
-	QStringList qrcFiles;
 	QStringList referencedFiles;
+    m_resources.clear();
 	for (int j=0; j<ui->tableWidgetQrcFiles->rowCount(); ++j) {
-		qrcFiles.append( ui->tableWidgetQrcFiles->item(j,0)->text() );
+        QString qrcFile = ui->tableWidgetQrcFiles->item(j,0)->data(Qt::UserRole).toString();
 
         // parse QRC file
+        parseQrc(qrcFile);
 	}
+
+    // now recursively scan the directory structure for wanted resources and c++/cpp files
+
 
 }
 
@@ -150,7 +155,23 @@ void QrcChecker::saveInput() {
 	for (int j=0; j<ui->tableWidgetQrcFiles->rowCount(); ++j)
 		qrcFiles.append( ui->tableWidgetQrcFiles->item(j,0)->text() );
 
-	 settings.setValue("QRCFiles", qrcFiles);
+    settings.setValue("QRCFiles", qrcFiles);
+}
+
+
+void QrcChecker::parseQrc(const QString &qrcFilePath) {
+    QFile xmlFile(qrcFilePath);
+    if (!xmlFile.open(QFile::ReadOnly))
+        return; // skip invalid QRC files
+    QXmlStreamReader xml(&xmlFile);
+    while (!xml.atEnd()) {
+        xml.readNext();
+        //
+    }
+    if (xml.hasError()) {
+        QMessageBox::critical(this, QString(), tr("Error reading QRC file '%1").arg(qrcFilePath));
+    }
+
 }
 
 

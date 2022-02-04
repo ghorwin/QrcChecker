@@ -43,8 +43,11 @@ private:
 	};
 
 	void saveInput();
+    void parseQrc(const QString & qrcFilePath);
 
-	Ui::QrcChecker *ui;
+
+    Ui::QrcChecker                  *ui;
+    std::vector<ResourceFileInfo>   m_resources;
 };
 
 extern const char * const ORGANIZATION;
