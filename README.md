@@ -22,9 +22,17 @@ and provides some automatic functionality for cleaning out qrc files and resourc
 
 The table will now be populated with a colored list of scan results:
 
-- magenta - files that appear in the qrc but are no-where used in the code
-- blue - files that are in the directory structure, but not referenced in qrc
-- red - files that are referenced via QRC-path in the source code/ui-files, but are not anywhere in the qrc; **these are the real bad guys to fix!**
+- magenta : files that appear in the qrc but are no-where used in the code
+- blue : files that are in the directory structure, but not referenced in qrc
+- red : files that are referenced via QRC-path in the source code/ui-files, but are not anywhere in the qrc; **these are the real bad guys to fix!**
+
+### Disclaimer
+
+This is a simple tool with only very basic error checking. It relies on the following conventions/expectations:
+
+- qrc-references in cpp/ui are not broken across lines; references in cpp and ui must be tightly enclosed in xml-tags, no spaces are allowed: `...>:/path/to/image.png<...` and `...":/path/to/image.png"...`
+- the tool _cannot_ identify commented-out code or #ifdef'd code blocks
+- many other things may not work... but alas, you got the code to if you need to fix anything, go ahead :-)
 
 
 ## Other QRC related tools
