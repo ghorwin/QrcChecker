@@ -66,9 +66,10 @@ QrcChecker::QrcChecker(QWidget *parent)
 	ui->pushButtonRemoveUnusedFromQrc->setEnabled(false);
 	ui->pushButtonRemoveUnusedFromFileSystem->setEnabled(false);
 	ui->toolButtonRemoveQrc->setEnabled(false);
-
+#if 0
 	ui->toolButtonAddQrc->setIcon(QPixmap(":/new/prefix/gfx/plusx.png"));ui->toolButtonRemoveQrc->setIcon(QPixmap(":/new/prefix/gfx/minus.png"));
 	ui->toolButtonAddQrc->setIcon(QPixmap(":/new/prefix/gfx/plus.png"));
+#endif
 }
 
 
