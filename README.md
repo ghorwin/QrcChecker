@@ -1,4 +1,6 @@
-# QrcChecker
+# QrcChecker 
+
+![QrcChecker_64](https://user-images.githubusercontent.com/6892676/152870684-47c7885a-61ba-4192-a226-f88c91c6b97d.png)
 
 Tool to check and clean out project's QRC files and resource directories (during refactoring/code cleanups).
 
