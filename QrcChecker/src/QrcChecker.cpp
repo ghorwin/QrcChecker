@@ -206,7 +206,10 @@ void QrcChecker::on_pushButtonScan_clicked() {
 		QTableWidgetItem * item = new QTableWidgetItem();
 		if (resInfo.m_cppFile.isEmpty()) {
 			item->setCheckState(Qt::Unchecked);
-			textColor = QColor("DarkMagenta");
+			if (resInfo.m_qrcPath.isEmpty())
+				textColor = QColor("RoyalBlue");						// existing files but not used and not qrc-referenced
+			else
+				textColor = QColor("DarkMagenta");						// unused but qrc-referenced-files
 		}
 		else
 			item->setCheckState(Qt::Checked);
@@ -220,7 +223,7 @@ void QrcChecker::on_pushButtonScan_clicked() {
 		item = new QTableWidgetItem();
 		if (!resInfo.m_exists) {
 			item->setCheckState(Qt::Unchecked);
-			textColor = QColor("FireBrick");
+			textColor = QColor("FireBrick");						// not existing files (error in source code!)
 		}
 		else
 			item->setCheckState(Qt::Checked);
