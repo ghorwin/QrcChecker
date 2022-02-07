@@ -57,6 +57,7 @@ QrcChecker::QrcChecker(QWidget *parent)
 	ui->tableWidget->horizontalHeaderItem(2)->setToolTip(tr("File path on disc"));
 	ui->tableWidget->horizontalHeaderItem(3)->setToolTip(tr("True, if the respective file exists"));
 	ui->tableWidget->horizontalHeaderItem(4)->setToolTip(tr("Source code file that references this resource"));
+	ui->tableWidget->horizontalHeader()->setStretchLastSection(true);
 	ui->tableWidget->resizeColumnsToContents();
 
 	ui->tableWidgetQrcFiles->setFont(f);
@@ -66,6 +67,7 @@ QrcChecker::QrcChecker(QWidget *parent)
 	ui->pushButtonRemoveUnusedFromFileSystem->setEnabled(false);
 	ui->toolButtonRemoveQrc->setEnabled(false);
 
+	ui->toolButtonAddQrc->setIcon(QPixmap(":/new/prefix/gfx/plusx.png"));
 	ui->toolButtonAddQrc->setIcon(QPixmap(":/new/prefix/gfx/plus.png"));
 }
 
@@ -196,10 +198,13 @@ void QrcChecker::on_pushButtonScan_clicked() {
 	QDir baseDir(ui->lineEditBaseDirectory->text());
 	ui->tableWidget->setRowCount(m_resources.size());
 	for (int i=0; i<(int)m_resources.size(); ++i) {
+		QColor textColor;
 		const ResourceFileInfo & resInfo = m_resources[(unsigned int)i];
 		QTableWidgetItem * item = new QTableWidgetItem();
-		if (resInfo.m_qrcIndex == -1)
+		if (resInfo.m_cppFile.isEmpty()) {
 			item->setCheckState(Qt::Unchecked);
+			textColor = QColor("DarkMagenta");
+		}
 		else
 			item->setCheckState(Qt::Checked);
 		item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
@@ -210,8 +215,10 @@ void QrcChecker::on_pushButtonScan_clicked() {
 		ui->tableWidget->setItem(i, 1, item);
 
 		item = new QTableWidgetItem();
-		if (!resInfo.m_exists)
+		if (!resInfo.m_exists) {
 			item->setCheckState(Qt::Unchecked);
+			textColor = QColor("FireBrick");
+		}
 		else
 			item->setCheckState(Qt::Checked);
 		item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
@@ -232,6 +239,9 @@ void QrcChecker::on_pushButtonScan_clicked() {
 		item = new QTableWidgetItem(relPath);
 		item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
 		ui->tableWidget->setItem(i, 4, item);
+
+		for (int j=0; j<ui->tableWidget->columnCount(); ++j)
+			ui->tableWidget->item(i,j)->setTextColor(textColor);
 	}
 	ui->tableWidget->resizeColumnsToContents();
 }
@@ -316,7 +326,6 @@ void QrcChecker::parseCPP(const QString &cppFilePath) {
 				std::vector<ResourceFileInfo>::iterator it = m_resources.begin();
 				for (; it != m_resources.end(); ++it) {
 					if (it->m_qrcPath == qrcPath) {
-						it->m_referenced = true;
 						if (it->m_cppFile.isEmpty())
 							it->m_cppFile = cppFilePath + QString(":%1").arg(i+1);
 						break;
@@ -329,7 +338,6 @@ void QrcChecker::parseCPP(const QString &cppFilePath) {
 					res.m_exists = false;
 					res.m_qrcIndex = -1;
 					res.m_qrcPath = qrcPath;
-					res.m_referenced = true;
 					res.m_cppFile = cppFilePath + QString(":%1").arg(i+1);
 					m_resources.push_back(res);
 				}
@@ -367,6 +375,7 @@ bool QrcChecker::parseResource(const QString & qrcFileDirectory, QXmlStreamReade
 			resInfo.m_qrcPath = qrcFilePath;
 			resInfo.m_filePath = absoluteFilePath;
 			resInfo.m_exists = QFileInfo::exists(absoluteFilePath);
+			resInfo.m_qrcIndex = 0; // TODO : set correct index
 			m_resources.push_back(resInfo);
 			xml.readNext(); // read end tag
 		}

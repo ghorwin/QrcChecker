@@ -40,11 +40,11 @@ private:
 		int		m_qrcIndex = -1;
 		/*! True, if contained in file system. */
 		bool	m_exists = false;
-		/*! True, if QRC path is referenced anywhere in a cpp file. */
-		bool	m_referenced = false;
 		/*! The QRC Path like ':/img/myPicture.png' as it is used in the cpp file; may include Prefix */
 		QString	m_qrcPath;
-		/*! Contains the filename of the first cpp file that contains this resource reference. */
+		/*! Contains the filename of the first cpp file that contains this resource reference.
+			If this is empty, the resource file is nowhere used
+		*/
 		QString m_cppFile;
 		/*! Absolute file path to project base */
 		QString	m_filePath;
