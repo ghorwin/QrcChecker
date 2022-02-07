@@ -51,8 +51,8 @@ QrcChecker::QrcChecker(QWidget *parent)
 	int rowHeight = fm.lineSpacing();
 	ui->tableWidget->setFont(f);
 	ui->tableWidget->verticalHeader()->setDefaultSectionSize(rowHeight);
-	ui->tableWidget->horizontalHeaderItem(0)->setToolTip(tr("The QRC resource path in form ':/<prefix>/filename.png'"));
-	ui->tableWidget->horizontalHeaderItem(1)->setToolTip(tr("True, if this file is referenced in a QRC file"));
+	ui->tableWidget->horizontalHeaderItem(0)->setToolTip(tr("True, if this file is referenced in a QRC file"));
+	ui->tableWidget->horizontalHeaderItem(1)->setToolTip(tr("The QRC resource path in form ':/<prefix>/filename.png'"));
 	ui->tableWidget->horizontalHeaderItem(2)->setToolTip(tr("File path on disc"));
 	ui->tableWidget->horizontalHeaderItem(3)->setToolTip(tr("True, if the respective file exists"));
 	ui->tableWidget->horizontalHeaderItem(4)->setToolTip(tr("Source code file that references this resource"));
