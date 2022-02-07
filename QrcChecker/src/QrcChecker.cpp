@@ -7,6 +7,7 @@
 #include <QTableWidget>
 #include <QSettings>
 #include <QXmlStreamReader>
+#include <QDirIterator>
 
 const char * const ORGANIZATION = "IBK";
 const char * const PROGRAM_VERSION_NAME = "QrcChecker 1.0";
@@ -125,31 +126,76 @@ void QrcChecker::on_pushButtonScan_clicked() {
 	for (int j=0; j<ui->tableWidgetQrcFiles->rowCount(); ++j) {
         QString qrcFile = ui->tableWidgetQrcFiles->item(j,0)->data(Qt::UserRole).toString();
 
-        // parse QRC file
+        // parse QRC file and add files to m_resources
         parseQrc(qrcFile);
 	}
 
     // now recursively scan the directory structure for wanted resources and c++/cpp files
+    QString baseDirPath(ui->lineEditBaseDirectory->text());
+    QStringList wildcards = wildCards().split(";");
+    // add source files, these will be parsed separately
+    wildcards << "*.cpp" << "*.cxx";
+    QDirIterator it(baseDirPath, wildcards, QDir::Files, QDirIterator::Subdirectories);
+    QStringList srcFiles;
+    while (it.hasNext()) {
+        QString resFilePath = it.next();
+        if (resFilePath.endsWith(".cpp") || resFilePath.endsWith(".cxx")) {
+            srcFiles.push_back(resFilePath);
+            continue;
+        }
+        // regular resource file
+        auto resIt = std::find(m_resources.begin(), m_resources.end(), resFilePath);
+        if (resIt == m_resources.end()) { // not found?
+            ResourceFileInfo newRes;
+            newRes.m_exists = true;
+            newRes.qrcIndex = -1;
+            newRes.m_filePath = resFilePath;
+            m_resources.push_back(newRes);
+        }
+        else {
+            // already referenced in QRC? Mark as existing on disk
+            resIt->m_exists = true;
+        }
+    }
 
+    // scan CPP files and add/update info in m_resources
+    for (QString s : srcFiles)
+        parseCPP(s);
 
+    // now populate the table
+    QDir baseDir(ui->lineEditBaseDirectory->text());
+    ui->tableWidget->setRowCount(m_resources.size());
+    for (int i=0; i<(int)m_resources.size(); ++i) {
+        const ResourceFileInfo & resInfo = m_resources[i];
+        QTableWidgetItem * item = new QTableWidgetItem();
+        if (resInfo.m_qrcFilePath.isEmpty())
+            item->setCheckState(Qt::Unchecked);
+        else
+            item->setCheckState(Qt::Checked);
+        item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+        ui->tableWidget->setItem(i, 0, item);
+
+        item = new QTableWidgetItem();
+        if (!resInfo.m_exists)
+            item->setCheckState(Qt::Unchecked);
+        else
+            item->setCheckState(Qt::Checked);
+        item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+        ui->tableWidget->setItem(i, 1, item);
+
+        // generate relative file path to base Dir
+        QString relPath = baseDir.relativeFilePath(resInfo.m_filePath);
+        item = new QTableWidgetItem(relPath);
+        item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+        ui->tableWidget->setItem(i, 2, item);
+    }
 }
 
 
 void QrcChecker::saveInput() {
 	QSettings settings(ORGANIZATION, PROGRAM_VERSION_NAME);
 	settings.setValue("BaseDirectory", ui->lineEditBaseDirectory->text());
-	QString wildCards = ui->lineEditResourceFileTypes->text().trimmed().toLower();
-	if (ui->checkBoxJPGFiles->isChecked() && !wildCards.contains("*.jpg")) {
-		if (wildCards.isEmpty())
-			wildCards += ";";
-		wildCards += "*.jpg";
-	}
-	if (ui->checkBoxPNGFiles->isChecked() && !wildCards.contains("*.png")) {
-		if (wildCards.isEmpty())
-			wildCards += ";";
-		wildCards += "*.png";
-	}
-	settings.setValue("FileTypeWildCards", wildCards);
+    settings.setValue("FileTypeWildCards", wildCards());
 
 	QStringList qrcFiles;
 	for (int j=0; j<ui->tableWidgetQrcFiles->rowCount(); ++j)
@@ -172,6 +218,27 @@ void QrcChecker::parseQrc(const QString &qrcFilePath) {
         QMessageBox::critical(this, QString(), tr("Error reading QRC file '%1").arg(qrcFilePath));
     }
 
+}
+
+void QrcChecker::parseCPP(const QString &cppFilePath)
+{
+
+}
+
+
+QString QrcChecker::wildCards() const {
+    QString wildCards = ui->lineEditResourceFileTypes->text().trimmed().toLower();
+    if (ui->checkBoxJPGFiles->isChecked() && !wildCards.contains("*.jpg")) {
+        if (!wildCards.isEmpty())
+            wildCards += ";";
+        wildCards += "*.jpg";
+    }
+    if (ui->checkBoxPNGFiles->isChecked() && !wildCards.contains("*.png")) {
+        if (!wildCards.isEmpty())
+            wildCards += ";";
+        wildCards += "*.png";
+    }
+    return wildCards;
 }
 
 

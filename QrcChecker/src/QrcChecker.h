@@ -32,7 +32,9 @@ private slots:
 private:
 	/*! Holds information about a referenced resource. */
 	struct ResourceFileInfo {
-		/*! Index of QRC file in list; -1 if not in QRC file. */
+
+        bool operator==(const QString & fpath) const { return m_filePath == fpath; }
+        /*! Index of QRC file in list of selected QRC files; -1 if resource is not yet referenced in a QRC file. */
 		int		qrcIndex;
 		/*! True, if contained in file system. */
 		bool	m_exists;
@@ -44,6 +46,10 @@ private:
 
 	void saveInput();
     void parseQrc(const QString & qrcFilePath);
+    void parseCPP(const QString & cppFilePath);
+
+    /*! Generates the wildcards string. */
+    QString wildCards() const;
 
 
     Ui::QrcChecker                  *ui;
