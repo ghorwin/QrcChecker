@@ -51,6 +51,11 @@ QrcChecker::QrcChecker(QWidget *parent)
 	int rowHeight = fm.lineSpacing();
 	ui->tableWidget->setFont(f);
 	ui->tableWidget->verticalHeader()->setDefaultSectionSize(rowHeight);
+	ui->tableWidget->horizontalHeaderItem(0)->setToolTip(tr("The QRC resource path in form ':/<prefix>/filename.png'"));
+	ui->tableWidget->horizontalHeaderItem(1)->setToolTip(tr("True, if this file is referenced in a QRC file"));
+	ui->tableWidget->horizontalHeaderItem(2)->setToolTip(tr("File path on disc"));
+	ui->tableWidget->horizontalHeaderItem(3)->setToolTip(tr("True, if the respective file exists"));
+	ui->tableWidget->horizontalHeaderItem(4)->setToolTip(tr("Source code file that references this resource"));
 
 	ui->tableWidgetQrcFiles->setFont(f);
 	ui->tableWidgetQrcFiles->verticalHeader()->setDefaultSectionSize(rowHeight);
@@ -142,13 +147,18 @@ void QrcChecker::on_pushButtonScan_clicked() {
 	QString baseDirPath(ui->lineEditBaseDirectory->text());
 	QStringList wildcards = wildCards().split(";");
 	// add source files, these will be parsed separately
-	wildcards << "*.cpp" << "*.cxx";
+	wildcards << "*.cpp" << "*.cxx" << "*.ui";
 	QDirIterator it(baseDirPath, wildcards, QDir::Files, QDirIterator::Subdirectories);
 	QStringList srcFiles;
+	QStringList uiFiles;
 	while (it.hasNext()) {
 		QString resFilePath = it.next();
 		if (resFilePath.endsWith(".cpp") || resFilePath.endsWith(".cxx")) {
 			srcFiles.push_back(resFilePath);
+			continue;
+		}
+		if (resFilePath.endsWith(".ui")) {
+			uiFiles.push_back(resFilePath);
 			continue;
 		}
 		// regular resource file
@@ -183,24 +193,35 @@ void QrcChecker::on_pushButtonScan_clicked() {
 		item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
 		ui->tableWidget->setItem(i, 0, item);
 
+		item = new QTableWidgetItem(resInfo.m_qrcPath);
+		item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+		ui->tableWidget->setItem(i, 1, item);
+
 		item = new QTableWidgetItem();
 		if (!resInfo.m_exists)
 			item->setCheckState(Qt::Unchecked);
 		else
 			item->setCheckState(Qt::Checked);
 		item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-		ui->tableWidget->setItem(i, 1, item);
-
-		item = new QTableWidgetItem(resInfo.m_qrcPath);
-		item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
 		ui->tableWidget->setItem(i, 2, item);
 
 		// generate relative file path to base Dir
 		QString relPath = baseDir.relativeFilePath(resInfo.m_filePath);
+		if (resInfo.m_filePath.isEmpty())
+			relPath.clear();
 		item = new QTableWidgetItem(relPath);
 		item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
 		ui->tableWidget->setItem(i, 3, item);
+
+		// generate relative file path to base Dir
+		relPath = baseDir.relativeFilePath(resInfo.m_cppFile);
+		if (resInfo.m_cppFile.isEmpty())
+			relPath.clear();
+		item = new QTableWidgetItem(relPath);
+		item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+		ui->tableWidget->setItem(i, 4, item);
 	}
+	ui->tableWidget->resizeColumnsToContents();
 }
 
 
@@ -232,8 +253,46 @@ void QrcChecker::parseQrc(const QString &qrcFilePath) {
 
 }
 
-void QrcChecker::parseCPP(const QString &cppFilePath) {
 
+void QrcChecker::parseCPP(const QString &cppFilePath) {
+	// read CPP file line by line and extract strings starting with '":/'
+	QFile f(cppFilePath);
+	if (!f.open(QFile::ReadOnly))
+		return;
+	QStringList lines = QString(f.readAll()).split("\n");
+	for (int i = 0; i<lines.count(); ++i) {
+		QString l = lines[i];
+		int p = l.indexOf("\":/");
+		if (p != -1) {
+			// find closing "
+			int p2 = l.indexOf('\"', p+1);
+			if (p2 != -1 && p2-p>3) {
+				QString qrcPath = l.mid(p+1, p2-p-1);
+				// lookup qrcPath in resources
+				std::vector<ResourceFileInfo>::iterator it = m_resources.begin();
+				for (; it != m_resources.end(); ++it) {
+					if (it->m_qrcPath == qrcPath) {
+						it->m_referenced = true;
+						if (it->m_cppFile.isEmpty())
+							it->m_cppFile = cppFilePath + QString(":%1").arg(i+1);
+						break;
+					}
+
+				}
+				if (it == m_resources.end()) {
+					// found a reference without matching QRC entry
+					ResourceFileInfo res;
+					res.m_exists = false;
+					res.m_qrcIndex = -1;
+					res.m_qrcPath = qrcPath;
+					res.m_referenced = true;
+					res.m_cppFile = cppFilePath + QString(":%1").arg(i+1);
+					m_resources.push_back(res);
+				}
+			}
+
+		}
+	}
 }
 
 

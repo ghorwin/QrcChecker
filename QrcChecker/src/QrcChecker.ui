@@ -258,17 +258,22 @@
      </column>
      <column>
       <property name="text">
+       <string>Resource QRC path</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
        <string>Exists</string>
       </property>
      </column>
      <column>
       <property name="text">
-       <string>Resource Path</string>
+       <string>File path</string>
       </property>
      </column>
      <column>
       <property name="text">
-       <string>Relative File Path</string>
+       <string>Referenced from Source</string>
       </property>
      </column>
     </widget>

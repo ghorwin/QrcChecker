@@ -34,12 +34,16 @@ private:
 	struct ResourceFileInfo {
 
 		bool operator==(const QString & fpath) const { return m_filePath == fpath; }
-		/*! Index of QRC file in list of selected QRC files; -1 if resource is not yet referenced in a QRC file. */
+		/*! Index of respectiv QRC file in list of selected QRC files; -1 if resource is not yet referenced in a QRC file. */
 		int		m_qrcIndex = -1;
 		/*! True, if contained in file system. */
 		bool	m_exists = false;
+		/*! True, if QRC path is referenced anywhere in a cpp file. */
+		bool	m_referenced = false;
 		/*! The QRC Path like ':/img/myPicture.png' as it is used in the cpp file; may include Prefix */
 		QString	m_qrcPath;
+		/*! Contains the filename of the first cpp file that contains this resource reference. */
+		QString m_cppFile;
 		/*! Absolute file path to project base */
 		QString	m_filePath;
 	};
