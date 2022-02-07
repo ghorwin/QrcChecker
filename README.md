@@ -34,7 +34,7 @@ This is a simple tool with only very basic error checking. It relies on the foll
 
 - qrc-references in cpp/ui are not broken across lines; references in cpp and ui must be tightly enclosed in xml-tags, no spaces are allowed: `...>:/path/to/image.png<...` and `...":/path/to/image.png"...`
 - the tool _cannot_ identify commented-out code or #ifdef'd code blocks
-- many other things may not work... but alas, you got the code to if you need to fix anything, go ahead :-)
+- many other things may not work... but alas, you got the code and if you need to fix anything, go ahead :-)
 
 
 ## Other QRC related tools
