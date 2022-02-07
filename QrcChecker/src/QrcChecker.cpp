@@ -21,6 +21,7 @@ QrcChecker::QrcChecker(QWidget *parent)
 	ui->setupUi(this);
 
 	setWindowTitle(PROGRAM_VERSION_NAME);
+	setWindowIcon(QPixmap(":/icons/QrcChecker_64.png"));
 
 	// restore input from settings
 	QSettings settings(ORGANIZATION, PROGRAM_VERSION_NAME);
