@@ -7,7 +7,7 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class QrcChecker; }
 QT_END_NAMESPACE
 
-class QrcChecker : public QDialog {
+class QrcChecker : public QWidget {
 	Q_OBJECT
 
 public:
@@ -27,33 +27,33 @@ private slots:
 
 	void on_pushButtonScan_clicked();
 
-    void on_lineEditBaseDirectory_editingFinished();
+	void on_lineEditBaseDirectory_editingFinished();
 
 private:
 	/*! Holds information about a referenced resource. */
 	struct ResourceFileInfo {
 
-        bool operator==(const QString & fpath) const { return m_filePath == fpath; }
-        /*! Index of QRC file in list of selected QRC files; -1 if resource is not yet referenced in a QRC file. */
-		int		qrcIndex;
+		bool operator==(const QString & fpath) const { return m_filePath == fpath; }
+		/*! Index of QRC file in list of selected QRC files; -1 if resource is not yet referenced in a QRC file. */
+		int		m_qrcIndex = -1;
 		/*! True, if contained in file system. */
-		bool	m_exists;
-		/*! Relative file path to QRC */
-		QString	m_qrcFilePath;
+		bool	m_exists = false;
+		/*! The QRC Path like ':/img/myPicture.png' as it is used in the cpp file; may include Prefix */
+		QString	m_qrcPath;
 		/*! Absolute file path to project base */
 		QString	m_filePath;
 	};
 
 	void saveInput();
-    void parseQrc(const QString & qrcFilePath);
-    void parseCPP(const QString & cppFilePath);
+	void parseQrc(const QString & qrcFilePath);
+	void parseCPP(const QString & cppFilePath);
 
-    /*! Generates the wildcards string. */
-    QString wildCards() const;
+	/*! Generates the wildcards string. */
+	QString wildCards() const;
 
 
-    Ui::QrcChecker                  *ui;
-    std::vector<ResourceFileInfo>   m_resources;
+	Ui::QrcChecker                  *ui;
+	std::vector<ResourceFileInfo>   m_resources;
 };
 
 extern const char * const ORGANIZATION;

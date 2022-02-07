@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>QrcChecker</class>
- <widget class="QDialog" name="QrcChecker">
+ <widget class="QWidget" name="QrcChecker">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>QrcChecker</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,1,0,0">
+  <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,1,0">
    <item row="3" column="0" colspan="2">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
@@ -204,7 +204,7 @@
       <item>
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>File type wildcards (e.g. &quot;*.gif;*.xml&quot;):</string>
+         <string>Additional file type wildcards (e.g. &quot;*.gif;*.xml&quot;):</string>
         </property>
        </widget>
       </item>
@@ -215,6 +215,9 @@
        <spacer name="verticalSpacer">
         <property name="orientation">
          <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Preferred</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
@@ -261,6 +264,11 @@
      <column>
       <property name="text">
        <string>Resource Path</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Relative File Path</string>
       </property>
      </column>
     </widget>
