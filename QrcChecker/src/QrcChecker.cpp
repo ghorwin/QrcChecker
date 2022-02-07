@@ -67,7 +67,7 @@ QrcChecker::QrcChecker(QWidget *parent)
 	ui->pushButtonRemoveUnusedFromFileSystem->setEnabled(false);
 	ui->toolButtonRemoveQrc->setEnabled(false);
 
-	ui->toolButtonAddQrc->setIcon(QPixmap(":/new/prefix/gfx/plusx.png"));
+	ui->toolButtonAddQrc->setIcon(QPixmap(":/new/prefix/gfx/plusx.png"));ui->toolButtonRemoveQrc->setIcon(QPixmap(":/new/prefix/gfx/minus.png"));
 	ui->toolButtonAddQrc->setIcon(QPixmap(":/new/prefix/gfx/plus.png"));
 }
 
@@ -193,6 +193,8 @@ void QrcChecker::on_pushButtonScan_clicked() {
 	// scan CPP files and add/update info in m_resources
 	for (QString s : srcFiles)
 		parseCPP(s);
+	for (QString s : uiFiles)
+		parseUI(s);
 
 	// now populate the table
 	QDir baseDir(ui->lineEditBaseDirectory->text());
@@ -317,10 +319,14 @@ void QrcChecker::parseCPP(const QString &cppFilePath) {
 	for (int i = 0; i<lines.count(); ++i) {
 		QString l = lines[i];
 		int p = l.indexOf("\":/");
-		if (p != -1) {
+		while (p != -1) {
 			// find closing "
 			int p2 = l.indexOf('\"', p+1);
-			if (p2 != -1 && p2-p>3) {
+			if (p2 == -1)
+				break; // no ending " in line, stop parsing this source code line
+
+			// substring long enough?
+			if (p2-p>3) {
 				QString qrcPath = l.mid(p+1, p2-p-1);
 				// lookup qrcPath in resources
 				std::vector<ResourceFileInfo>::iterator it = m_resources.begin();
@@ -342,7 +348,51 @@ void QrcChecker::parseCPP(const QString &cppFilePath) {
 					m_resources.push_back(res);
 				}
 			}
+			p = l.indexOf("\":/", p2);
+		}
+	}
+}
 
+
+void QrcChecker::parseUI(const QString & uiFilePath) {
+	// read UI file line by line and extract strings starting with '>:/'
+	QFile f(uiFilePath);
+	if (!f.open(QFile::ReadOnly))
+		return;
+	QStringList lines = QString(f.readAll()).split("\n");
+	for (int i = 0; i<lines.count(); ++i) {
+		QString l = lines[i];
+		int p = l.indexOf(">:/");
+		while (p != -1) {
+			// find closing "
+			int p2 = l.indexOf('<', p+1);
+			if (p2 == -1)
+				break; // no ending " in line, stop parsing this source code line
+
+			// substring long enough?
+			if (p2-p>3) {
+				QString qrcPath = l.mid(p+1, p2-p-1);
+				// lookup qrcPath in resources
+				std::vector<ResourceFileInfo>::iterator it = m_resources.begin();
+				for (; it != m_resources.end(); ++it) {
+					if (it->m_qrcPath == qrcPath) {
+						if (it->m_cppFile.isEmpty())
+							it->m_cppFile = uiFilePath + QString(":%1").arg(i+1);
+						break;
+					}
+
+				}
+				if (it == m_resources.end()) {
+					// found a reference without matching QRC entry
+					ResourceFileInfo res;
+					res.m_exists = false;
+					res.m_qrcIndex = -1;
+					res.m_qrcPath = qrcPath;
+					res.m_cppFile = uiFilePath + QString(":%1").arg(i+1);
+					m_resources.push_back(res);
+				}
+			}
+			p = l.indexOf(">:/", p2);
 		}
 	}
 }

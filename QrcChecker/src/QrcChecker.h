@@ -53,6 +53,7 @@ private:
 	void saveInput();
 	void parseQrc(const QString & qrcFilePath);
 	void parseCPP(const QString & cppFilePath);
+	void parseUI(const QString & uiFilePath);
 	bool parseResource(const QString & qrcFileDirectory, QXmlStreamReader & xml);
 
 	/*! Generates the wildcards string. */
