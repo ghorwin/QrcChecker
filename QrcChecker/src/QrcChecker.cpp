@@ -56,12 +56,14 @@ QrcChecker::QrcChecker(QWidget *parent)
 	ui->tableWidget->horizontalHeaderItem(2)->setToolTip(tr("File path on disc"));
 	ui->tableWidget->horizontalHeaderItem(3)->setToolTip(tr("True, if the respective file exists"));
 	ui->tableWidget->horizontalHeaderItem(4)->setToolTip(tr("Source code file that references this resource"));
+	ui->tableWidget->resizeColumnsToContents();
 
 	ui->tableWidgetQrcFiles->setFont(f);
 	ui->tableWidgetQrcFiles->verticalHeader()->setDefaultSectionSize(rowHeight);
 
 	ui->pushButtonRemoveUnusedFromQrc->setEnabled(false);
 	ui->pushButtonRemoveUnusedFromFileSystem->setEnabled(false);
+	ui->toolButtonRemoveQrc->setEnabled(false);
 }
 
 
