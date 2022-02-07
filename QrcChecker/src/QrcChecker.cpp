@@ -9,6 +9,7 @@
 #include <QXmlStreamReader>
 #include <QDirIterator>
 #include <QFontMetrics>
+#include <QDebug>
 
 const char * const ORGANIZATION = "IBK";
 const char * const PROGRAM_VERSION_NAME = "QrcChecker 1.0";
@@ -64,6 +65,8 @@ QrcChecker::QrcChecker(QWidget *parent)
 	ui->pushButtonRemoveUnusedFromQrc->setEnabled(false);
 	ui->pushButtonRemoveUnusedFromFileSystem->setEnabled(false);
 	ui->toolButtonRemoveQrc->setEnabled(false);
+
+	ui->toolButtonAddQrc->setIcon(QPixmap(":/new/prefix/gfx/plus.png"));
 }
 
 
@@ -135,6 +138,18 @@ void QrcChecker::on_toolButtonRemoveQrc_clicked() {
 void QrcChecker::on_pushButtonScan_clicked() {
 	saveInput();
 
+	QString baseDirPath(ui->lineEditBaseDirectory->text().trimmed());
+	if (baseDirPath.isEmpty() || !QFileInfo::exists(baseDirPath))  {
+		QMessageBox::critical(this, QString(), tr("A valid base path for scanning the directory structure is needed."));
+		ui->lineEditBaseDirectory->setFocus();
+		return;
+	}
+
+	if (ui->tableWidgetQrcFiles->rowCount() == 0) {
+		QMessageBox::critical(this, QString(), tr("You should select at least one qrc-file to check!"));
+		return;
+	}
+
 	// start by parsing qrc files
 	QStringList referencedFiles;
 	m_resources.clear();
@@ -146,7 +161,6 @@ void QrcChecker::on_pushButtonScan_clicked() {
 	}
 
 	// now recursively scan the directory structure for wanted resources and c++/cpp files
-	QString baseDirPath(ui->lineEditBaseDirectory->text());
 	QStringList wildcards = wildCards().split(";");
 	// add source files, these will be parsed separately
 	wildcards << "*.cpp" << "*.cxx" << "*.ui";
@@ -163,7 +177,7 @@ void QrcChecker::on_pushButtonScan_clicked() {
 			uiFiles.push_back(resFilePath);
 			continue;
 		}
-		// regular resource file
+		// regular resource file, mark all resource files with matching absolute path as existing
 		auto resIt = std::find(m_resources.begin(), m_resources.end(), resFilePath);
 		if (resIt == m_resources.end()) { // not found?
 			ResourceFileInfo newRes;
@@ -171,10 +185,6 @@ void QrcChecker::on_pushButtonScan_clicked() {
 			newRes.m_qrcIndex = -1;
 			newRes.m_filePath = resFilePath;
 			m_resources.push_back(newRes);
-		}
-		else {
-			// already referenced in QRC? Mark as existing on disk
-			resIt->m_exists = true;
 		}
 	}
 
@@ -186,7 +196,7 @@ void QrcChecker::on_pushButtonScan_clicked() {
 	QDir baseDir(ui->lineEditBaseDirectory->text());
 	ui->tableWidget->setRowCount(m_resources.size());
 	for (int i=0; i<(int)m_resources.size(); ++i) {
-		const ResourceFileInfo & resInfo = m_resources[i];
+		const ResourceFileInfo & resInfo = m_resources[(unsigned int)i];
 		QTableWidgetItem * item = new QTableWidgetItem();
 		if (resInfo.m_qrcIndex == -1)
 			item->setCheckState(Qt::Unchecked);
@@ -242,17 +252,49 @@ void QrcChecker::saveInput() {
 
 void QrcChecker::parseQrc(const QString &qrcFilePath) {
 	QFile xmlFile(qrcFilePath);
-	if (!xmlFile.open(QFile::ReadOnly))
+	if (!xmlFile.open(QFile::ReadOnly)) {
+		qDebug() << QString("Invalid qrc-file path '%1'").arg(qrcFilePath);
 		return; // skip invalid QRC files
+	}
+
+	QString qrcDirectory = QFileInfo(qrcFilePath).dir().absolutePath();
+
 	QXmlStreamReader xml(&xmlFile);
 	while (!xml.atEnd()) {
 		xml.readNext();
-		//
+		if (xml.isStartElement()) {
+			QString ename = xml.name().toString();
+			if (ename != "RCC") {
+				qDebug() << "Invalid qrc file.";
+				return;
+			}
+			while (!xml.atEnd()) {
+				xml.readNext();
+				if (xml.isStartElement()) {
+					QString ename = xml.name().toString();
+					if (ename != "qresource") {
+						qDebug() << "Invalid qrc file.";
+						return;
+					}
+					// xml tag is being parsed
+					if (!parseResource(qrcDirectory, xml))
+						return;
+				}
+			}
+			// process RCC
+		}
+		else if (xml.isEndElement()) {
+			QString ename = xml.name().toString();
+			if (ename != "RCC") {
+				qDebug() << "Invalid qrc file.";
+				return;
+				}
+			break;
+		}
 	}
 	if (xml.hasError()) {
 		QMessageBox::critical(this, QString(), tr("Error reading QRC file '%1").arg(qrcFilePath));
 	}
-
 }
 
 
@@ -295,6 +337,49 @@ void QrcChecker::parseCPP(const QString &cppFilePath) {
 
 		}
 	}
+}
+
+
+bool QrcChecker::parseResource(const QString & qrcFileDirectory, QXmlStreamReader & xml) {
+	// read prefix
+	if (!xml.attributes().hasAttribute("prefix")) {
+		qDebug() << "Invalid qrc file, missing 'prefix' attribute in qresource tag.";
+		return false;
+	}
+	QString prefix = xml.attributes().value("prefix").toString();
+	if (prefix.isEmpty() || !prefix.endsWith("/"))
+		prefix += "/";
+	while (!xml.atEnd()) {
+		xml.readNext();
+		if (xml.isStartElement()) {
+			QString ename = xml.name().toString();
+			if (ename != "file") {
+				qDebug() << "Invalid qrc file.";
+				return false;
+			}
+			QString qrcFilePath = xml.readElementText();
+			// generate absolute file path
+			QString absoluteFilePath = qrcFileDirectory + "/" + qrcFilePath;
+			// add prefix to generate qrcPath that is used in project files
+			qrcFilePath = ":" + prefix + qrcFilePath;
+			// now add this resource
+			ResourceFileInfo resInfo;
+			resInfo.m_qrcPath = qrcFilePath;
+			resInfo.m_filePath = absoluteFilePath;
+			resInfo.m_exists = QFileInfo::exists(absoluteFilePath);
+			m_resources.push_back(resInfo);
+			xml.readNext(); // read end tag
+		}
+		else if (xml.isEndElement()) {
+			QString ename = xml.name().toString();
+			if (ename != "qresource") {
+				qDebug() << "Invalid qrc file.";
+				return false;
+			}
+			break;
+		}
+	}
+	return true;
 }
 
 

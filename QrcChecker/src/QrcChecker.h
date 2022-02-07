@@ -5,8 +5,10 @@
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class QrcChecker; }
+class QXmlStreamReader;
 QT_END_NAMESPACE
 
+/*! The main widget of the QrcChecker application. */
 class QrcChecker : public QWidget {
 	Q_OBJECT
 
@@ -51,6 +53,7 @@ private:
 	void saveInput();
 	void parseQrc(const QString & qrcFilePath);
 	void parseCPP(const QString & cppFilePath);
+	bool parseResource(const QString & qrcFileDirectory, QXmlStreamReader & xml);
 
 	/*! Generates the wildcards string. */
 	QString wildCards() const;

@@ -3,4 +3,8 @@
         <file>gfx/minus.png</file>
         <file>gfx/plus.png</file>
     </qresource>
+    <qresource prefix="/new/prefix1"/>
+    <qresource prefix="/new/prefix">
+        <file>gfx/plus.png</file>
+    </qresource>
 </RCC>
