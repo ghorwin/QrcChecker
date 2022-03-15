@@ -1,0 +1,6 @@
+/release/
+/debug/
+/.qmake.stash
+/Makefile
+/qrc_QrcChecker.cpp
+*.pro.user
