@@ -30,13 +30,16 @@ else {
 
 
 SOURCES += \
+	src/AboutDialog.cpp \
 	src/QrcChecker.cpp \
 	src/main.cpp
 
 HEADERS += \
+	src/AboutDialog.h \
 	src/QrcChecker.h
 
 FORMS += \
+	src/AboutDialog.ui \
 	src/QrcChecker.ui
 
 TRANSLATIONS += \

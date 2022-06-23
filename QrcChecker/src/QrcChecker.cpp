@@ -14,6 +14,7 @@
 const char * const ORGANIZATION = "IBK";
 const char * const PROGRAM_VERSION_NAME = "QrcChecker 1.0";
 
+#include "AboutDialog.h"
 
 QrcChecker::QrcChecker(QWidget *parent)
 	: QWidget(parent), ui(new Ui::QrcChecker)
@@ -27,7 +28,7 @@ QrcChecker::QrcChecker(QWidget *parent)
 	QSettings settings(ORGANIZATION, PROGRAM_VERSION_NAME);
 	QString baseDir = settings.value("BaseDirectory", QString()).toString();
 	QString wcs = settings.value("FileTypeWildCards", QString()).toString();
-	QStringList wc = wcs.split(";", QString::SkipEmptyParts);
+	QStringList wc = wcs.split(";", Qt::SkipEmptyParts);
 	ui->lineEditBaseDirectory->setText(baseDir);
 	ui->checkBoxJPGFiles->setChecked( wc.contains("*.jpg"));
 	ui->checkBoxPNGFiles->setChecked( wc.contains("*.png"));
@@ -200,7 +201,7 @@ void QrcChecker::on_pushButtonScan_clicked() {
 
 	// now populate the table
 	QDir baseDir(ui->lineEditBaseDirectory->text());
-	ui->tableWidget->setRowCount(m_resources.size());
+	ui->tableWidget->setRowCount((int)m_resources.size());
 	for (int i=0; i<(int)m_resources.size(); ++i) {
 		QColor textColor;
 		const ResourceFileInfo & resInfo = m_resources[(unsigned int)i];
@@ -248,7 +249,7 @@ void QrcChecker::on_pushButtonScan_clicked() {
 		ui->tableWidget->setItem(i, 4, item);
 
 		for (int j=0; j<ui->tableWidget->columnCount(); ++j)
-			ui->tableWidget->item(i,j)->setTextColor(textColor);
+			ui->tableWidget->item(i,j)->setForeground(textColor);
 	}
 	ui->tableWidget->resizeColumnsToContents();
 }
@@ -474,3 +475,10 @@ void QrcChecker::on_lineEditBaseDirectory_editingFinished() {
 		w->setText(relPath);
 	}
 }
+
+
+void QrcChecker::on_toolButtonAbout_clicked() {
+	AboutDialog dlg;
+	dlg.exec();
+}
+

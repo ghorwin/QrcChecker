@@ -44,6 +44,13 @@
       </spacer>
      </item>
      <item>
+      <widget class="QToolButton" name="toolButtonAbout">
+       <property name="text">
+        <string>About...</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="pushButtonQuit">
        <property name="text">
         <string>Quit</string>
@@ -200,6 +207,12 @@
        <spacer name="verticalSpacer">
         <property name="orientation">
          <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
         </property>
        </spacer>
       </item>

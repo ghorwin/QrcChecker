@@ -31,6 +31,8 @@ private slots:
 
 	void on_lineEditBaseDirectory_editingFinished();
 
+	void on_toolButtonAbout_clicked();
+
 private:
 	/*! Holds information about a referenced resource. */
 	struct ResourceFileInfo {
